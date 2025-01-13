@@ -1,5 +1,4 @@
 import { nlEl } from "./client/helpers";
-import { ITelCtx } from "./client/interfaces/contexts";
 export interface Identifiable {
   id?: string;
 }
