@@ -3,20 +3,21 @@ import AccessibilityHandler from "../handlers/AccessibilityHandler";
 import DOMValidator from "../validators/DOMValidator";
 import IOHandler from "../handlers/IOHandler";
 import AccessibilityValidator from "../validators/AccessibilityValidator";
+import { Provider } from "@/lib/definitions/foundations";
 export const setRole = (el: Element, v: string): void => {
   el.setAttribute("role", v);
 };
-export default class AccessibilityProvider {
+export default class AccessibilityProvider implements Provider {
   #elements: Array<Element>;
   constructor(_elements: List<Element>) {
     this.#elements = (() => {
       return [
         ...(!Array.isArray(_elements) ? Array.from(_elements) : _elements),
-      ].filter(el => el instanceof Element);
+      ].filter((el) => el instanceof Element);
     })();
   }
-  setup(): void {
-    if (!this.#elements.length) return;
+  setup(): AccessibilityProvider {
+    if (!this.#elements.length) return this;
     for (let i = 0; i < this.#elements.length; i++) {
       const el = this.#elements[i];
       if (!this.isAccessibleRich(el) && !this.isRedundant(el)) continue;
@@ -26,6 +27,7 @@ export default class AccessibilityProvider {
       this.clearRedundant(el);
       el instanceof HTMLElement && AccessibilityHandler.trackAriaState(el);
     }
+    return this;
   }
   isAccessibleRich(el: Element): boolean {
     return el instanceof HTMLHtmlElement ||
@@ -55,7 +57,7 @@ export default class AccessibilityProvider {
       "img",
       "table",
       "article",
-    ].some(t => t === tag);
+    ].some((t) => t === tag);
   }
   clearRedundant(el: Element): void {
     !el.classList.contains("customRole") &&
@@ -99,7 +101,7 @@ export default class AccessibilityProvider {
         "navigation",
         "region",
         "search",
-      ].some(r => !DOMValidator.isGeneric(el) && r === el.role) ||
+      ].some((r) => !DOMValidator.isGeneric(el) && r === el.role) ||
         Object.entries({
           nav: "navigation",
           main: "main",
@@ -191,7 +193,7 @@ export default class AccessibilityProvider {
         ) {
           if (el.textContent?.trim()) inferredLabel = el.textContent.trim();
         }
-        el.querySelectorAll("*").forEach(child => {
+        el.querySelectorAll("*").forEach((child) => {
           const cl = child.classList;
           if (
             cl.contains("fa-search") ||
@@ -343,7 +345,7 @@ export default class AccessibilityProvider {
       assignListbox = (list: HTMLElement): void => {
         if (list.classList.contains("listbox") && list.role !== "listbox")
           setRole(list, "listbox");
-        [...list.querySelectorAll("*")].forEach(c => {
+        [...list.querySelectorAll("*")].forEach((c) => {
           if (
             !(c instanceof HTMLOptionElement) &&
             !c.classList.contains("option") &&
@@ -389,17 +391,17 @@ export default class AccessibilityProvider {
             if (
               (cl.contains("combobox") ||
                 ([...el.children].some(
-                  c => c.role === "listbox" || c instanceof HTMLUListElement
+                  (c) => c.role === "listbox" || c instanceof HTMLUListElement
                 ) &&
                   [...el.children].some(
-                    c =>
+                    (c) =>
                       c.role === "textbox" ||
                       DOMValidator.isDefaultWritableInput(el)
                   ))) &&
               el.role !== "combobox"
             )
               setRole(el, "combobox");
-            el.querySelectorAll('[class*="group"]').forEach(g =>
+            el.querySelectorAll('[class*="group"]').forEach((g) =>
               g.setAttribute("role", "group")
             );
             el.ariaExpanded = el.autofocus ? "true" : "false";
@@ -430,14 +432,14 @@ export default class AccessibilityProvider {
       const desc = [...el.querySelectorAll("*")];
       if (
         desc.some(
-          d =>
+          (d) =>
             (d instanceof HTMLInputElement && d.type === "radio") ||
             (DOMValidator.isGeneric(d) && d.role === "radio")
         ) &&
         (cl.contains("radiogroup") ||
           (desc.length &&
             ![el, ...el.querySelectorAll("*")].some(
-              el => el.role === "radiogroup"
+              (el) => el.role === "radiogroup"
             )))
       )
         setRole(el, "radiogroup");
@@ -460,7 +462,7 @@ export default class AccessibilityProvider {
     ) {
       if (cl.contains("listbox") && el.role !== "listbox")
         setRole(el, "listbox");
-      [...el.querySelectorAll("*")].forEach(c => {
+      [...el.querySelectorAll("*")].forEach((c) => {
         if (
           !c.classList.contains("option") &&
           ![...c.querySelectorAll("*")].length &&
@@ -485,26 +487,26 @@ export default class AccessibilityProvider {
       ) {
         setRole(el, "tree");
         [...el.children].forEach(
-          c => !c.classList.contains("branch") && c.classList.add("branch")
+          (c) => !c.classList.contains("branch") && c.classList.add("branch")
         );
-        el.querySelectorAll('[class*="branch"]').forEach(branch =>
+        el.querySelectorAll('[class*="branch"]').forEach((branch) =>
           branch.setAttribute("role", "treeitem")
         );
-        [...el.querySelectorAll("*")].forEach(c => {
+        [...el.querySelectorAll("*")].forEach((c) => {
           const els = [...c.querySelectorAll("*")];
           !c.classList.contains("branch") &&
             !c.classList.contains("group") &&
             els.length &&
-            !els.some(cc => cc.classList.contains("branch")) &&
+            !els.some((cc) => cc.classList.contains("branch")) &&
             c.classList.add("group");
         });
-        el.querySelectorAll('[class*="group"]').forEach(g =>
+        el.querySelectorAll('[class*="group"]').forEach((g) =>
           g.setAttribute("role", "group")
         );
       } else if (
         cl.contains("tooltip") ||
         (tip &&
-          [...el.querySelectorAll("*")].some(c =>
+          [...el.querySelectorAll("*")].some((c) =>
             c.classList.contains("tooltip")
           ))
       )
@@ -529,10 +531,10 @@ export default class AccessibilityProvider {
         el.setAttribute("aria-relevant", "additions");
         [...el.querySelectorAll("*")]
           .filter(
-            el =>
+            (el) =>
               DOMValidator.isDefaultWritableInput(el) || el.role === "textbox"
           )
-          .forEach(tb => {
+          .forEach((tb) => {
             if (!tb.ariaLabel)
               tb.setAttribute(
                 "aria-label",
@@ -546,7 +548,7 @@ export default class AccessibilityProvider {
         if (cl.contains("cell") || cl.contains("td") || cl.contains("th"))
           setRole(el, "cell");
         else if (cl.contains("menu")) {
-          [...el.querySelectorAll("*")].forEach(c => {
+          [...el.querySelectorAll("*")].forEach((c) => {
             if (
               c.classList.contains("menuitemcheckbox") ||
               c.role === "checkbox" ||
@@ -611,7 +613,7 @@ export default class AccessibilityProvider {
             "tablist",
             "table",
             "timer",
-          ].forEach(r => cl.contains(r) && setRole(el, r));
+          ].forEach((r) => cl.contains(r) && setRole(el, r));
         }
       }
     }
@@ -624,7 +626,7 @@ export default class AccessibilityProvider {
       if (controlled.role === "tabpanel") setRole(e, "tab");
       else if (
         ["menu", "listbox", "tree", "grid", "dialog"].some(
-          r => r === controlled.role
+          (r) => r === controlled.role
         )
       ) {
         e.ariaHasPopup = controlled.role;

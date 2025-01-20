@@ -4,11 +4,12 @@ import {
   genericElement,
   imageLikeElement,
   inputLikeElement,
+  listElement,
   pressableElement,
 } from "@/lib/definitions/client/helpers";
 export default class DOMValidator {
   static hasAnyClass(el: Element, compared: Array<string>) {
-    return compared.some(cls => el.classList.contains(cls));
+    return compared.some((cls) => el.classList.contains(cls));
   }
   static isGeneric(el: Element): el is genericElement {
     return el instanceof HTMLDivElement || el instanceof HTMLSpanElement;
@@ -147,7 +148,7 @@ export default class DOMValidator {
         "month",
         "week",
         "time",
-      ].some(t => t === el.type)
+      ].some((t) => t === el.type)
     );
   }
   static isCustomSelector(el: EventTarget): el is HTMLElement {
@@ -182,5 +183,13 @@ export default class DOMValidator {
   }
   static isDisableable(el: EventTarget): el is HTMLElement {
     return this.isDefaultDisableable(el) || this.isCustomDisableable(el);
+  }
+  static isDefaultList(el: EventTarget): el is listElement {
+    return (
+      el instanceof HTMLUListElement ||
+      el instanceof HTMLOListElement ||
+      el instanceof HTMLDataListElement ||
+      el instanceof HTMLMenuElement
+    );
   }
 }
