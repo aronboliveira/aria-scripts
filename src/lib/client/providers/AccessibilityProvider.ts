@@ -383,7 +383,8 @@ export default class AccessibilityProvider implements Provider {
           el.setAttribute("aria-live", "assertive");
         }
       }
-    } else if (
+    }
+    if (
       el instanceof HTMLInputElement &&
       el.type !== "search" &&
       (cl.contains("search") || cl.contains("searchbox"))
@@ -479,8 +480,10 @@ export default class AccessibilityProvider implements Provider {
           c.classList.add("option");
       });
     } else if (
-      isSectGeneric &&
-      (lowTag === "nav" || lowTag === "aside" || lowTag === "dialog")
+      isSectGeneric ||
+      lowTag === "nav" ||
+      lowTag === "aside" ||
+      lowTag === "dialog"
     ) {
       const tip = el.querySelector('[class*="tip"]');
       if (cl.contains("toolbar")) setRole(el, "toolbar");
