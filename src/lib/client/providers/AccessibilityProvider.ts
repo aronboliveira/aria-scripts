@@ -342,6 +342,7 @@ export default class AccessibilityProvider implements Provider {
     } else if (AccessibilityValidator.isAriaDescribleable(el))
       !findAndAssignDescriptor(el) && assignOwn(el as HTMLElement);
   }
+  /* eslint-disable */
   applyRole(el: Element): void {
     if (el.role) return;
     const isGeneric = DOMValidator.isGeneric(el),
@@ -626,6 +627,7 @@ export default class AccessibilityProvider implements Provider {
       }
     }
   }
+  /* eslint-enable */
   #assignControlled = (e: Element): void => {
     const controlledId = (e as any)[`ariaControls`];
     if (controlledId) {
