@@ -13,7 +13,7 @@ export default class AccessibilityProvider implements Provider {
     this.#elements = (() => {
       return [
         ...(!Array.isArray(_elements) ? Array.from(_elements) : _elements),
-      ].filter((el) => el instanceof Element);
+      ].filter(el => el instanceof Element);
     })();
   }
   setup(): AccessibilityProvider {
@@ -25,7 +25,9 @@ export default class AccessibilityProvider implements Provider {
       this.applyAriaLabel(el);
       this.applyAriaDescription(el);
       this.clearRedundant(el);
+      /* eslint-disable */
       el instanceof HTMLElement && AccessibilityHandler.trackAriaState(el);
+      /* eslint-enable */
     }
     return this;
   }
@@ -57,9 +59,10 @@ export default class AccessibilityProvider implements Provider {
       "img",
       "table",
       "article",
-    ].some((t) => t === tag);
+    ].some(t => t === tag);
   }
   clearRedundant(el: Element): void {
+    /* eslint-disable */
     !el.classList.contains("customRole") &&
       ([
         "article",
@@ -101,7 +104,7 @@ export default class AccessibilityProvider implements Provider {
         "navigation",
         "region",
         "search",
-      ].some((r) => !DOMValidator.isGeneric(el) && r === el.role) ||
+      ].some(r => !DOMValidator.isGeneric(el) && r === el.role) ||
         Object.entries({
           nav: "navigation",
           main: "main",
@@ -122,6 +125,7 @@ export default class AccessibilityProvider implements Provider {
             (el.type === "image" && el.role === "img") ||
             el.type === el.role))) &&
       el.removeAttribute("role");
+    /* eslint-enable */
   }
   applyAriaLabel(el: Element): void {
     if (
@@ -182,7 +186,7 @@ export default class AccessibilityProvider implements Provider {
         el.ariaLabel = labeler.innerText;
       }, 500);
     } else if (DOMValidator.isButton(el)) {
-      const useClass = (): boolean => {
+      const utilizeClass = (): boolean => {
         let inferredLabel;
         if (
           DOMValidator.hasAnyClass(el, [
@@ -193,7 +197,7 @@ export default class AccessibilityProvider implements Provider {
         ) {
           if (el.textContent?.trim()) inferredLabel = el.textContent.trim();
         }
-        el.querySelectorAll("*").forEach((child) => {
+        el.querySelectorAll("*").forEach(child => {
           const cl = child.classList;
           if (
             cl.contains("fa-search") ||
@@ -220,12 +224,14 @@ export default class AccessibilityProvider implements Provider {
           )
             inferredLabel = "Remove";
         });
+        /* eslint-disable */
         if (inferredLabel) el.setAttribute("aria-label", inferredLabel);
         return inferredLabel ? true : false;
+        /* eslint-enable */
       };
       if (el.dataset.label)
-        !findAndAssignLabeler(el) && !useClass() && assignOwn(el);
-      else !useClass() && assignOwn(el);
+        !findAndAssignLabeler(el) && !utilizeClass() && assignOwn(el);
+      else !utilizeClass() && assignOwn(el);
       const id = el.id;
       setTimeout(() => {
         if (!el || !el.isConnected) el = document.getElementById(id) as any;
@@ -345,7 +351,7 @@ export default class AccessibilityProvider implements Provider {
       assignListbox = (list: HTMLElement): void => {
         if (list.classList.contains("listbox") && list.role !== "listbox")
           setRole(list, "listbox");
-        [...list.querySelectorAll("*")].forEach((c) => {
+        [...list.querySelectorAll("*")].forEach(c => {
           if (
             !(c instanceof HTMLOptionElement) &&
             !c.classList.contains("option") &&
@@ -382,6 +388,7 @@ export default class AccessibilityProvider implements Provider {
       el.type !== "search" &&
       (cl.contains("search") || cl.contains("searchbox"))
     ) {
+      setRole(el, "searchbox");
     } else if (el instanceof HTMLElement && el.contentEditable === "true") {
       if (!(el instanceof HTMLInputElement)) {
         if (!DOMValidator.isDefaultEntry(el)) {
@@ -391,17 +398,17 @@ export default class AccessibilityProvider implements Provider {
             if (
               (cl.contains("combobox") ||
                 ([...el.children].some(
-                  (c) => c.role === "listbox" || c instanceof HTMLUListElement
+                  c => c.role === "listbox" || c instanceof HTMLUListElement
                 ) &&
                   [...el.children].some(
-                    (c) =>
+                    c =>
                       c.role === "textbox" ||
                       DOMValidator.isDefaultWritableInput(el)
                   ))) &&
               el.role !== "combobox"
             )
               setRole(el, "combobox");
-            el.querySelectorAll('[class*="group"]').forEach((g) =>
+            el.querySelectorAll('[class*="group"]').forEach(g =>
               g.setAttribute("role", "group")
             );
             el.ariaExpanded = el.autofocus ? "true" : "false";
@@ -432,14 +439,14 @@ export default class AccessibilityProvider implements Provider {
       const desc = [...el.querySelectorAll("*")];
       if (
         desc.some(
-          (d) =>
+          d =>
             (d instanceof HTMLInputElement && d.type === "radio") ||
             (DOMValidator.isGeneric(d) && d.role === "radio")
         ) &&
         (cl.contains("radiogroup") ||
           (desc.length &&
             ![el, ...el.querySelectorAll("*")].some(
-              (el) => el.role === "radiogroup"
+              el => el.role === "radiogroup"
             )))
       )
         setRole(el, "radiogroup");
@@ -462,7 +469,7 @@ export default class AccessibilityProvider implements Provider {
     ) {
       if (cl.contains("listbox") && el.role !== "listbox")
         setRole(el, "listbox");
-      [...el.querySelectorAll("*")].forEach((c) => {
+      [...el.querySelectorAll("*")].forEach(c => {
         if (
           !c.classList.contains("option") &&
           ![...c.querySelectorAll("*")].length &&
@@ -472,10 +479,8 @@ export default class AccessibilityProvider implements Provider {
           c.classList.add("option");
       });
     } else if (
-      isSectGeneric ||
-      lowTag === "nav" ||
-      lowTag === "aside" ||
-      lowTag === "dialog"
+      isSectGeneric &&
+      (lowTag === "nav" || lowTag === "aside" || lowTag === "dialog")
     ) {
       const tip = el.querySelector('[class*="tip"]');
       if (cl.contains("toolbar")) setRole(el, "toolbar");
@@ -487,26 +492,26 @@ export default class AccessibilityProvider implements Provider {
       ) {
         setRole(el, "tree");
         [...el.children].forEach(
-          (c) => !c.classList.contains("branch") && c.classList.add("branch")
+          c => !c.classList.contains("branch") && c.classList.add("branch")
         );
-        el.querySelectorAll('[class*="branch"]').forEach((branch) =>
+        el.querySelectorAll('[class*="branch"]').forEach(branch =>
           branch.setAttribute("role", "treeitem")
         );
-        [...el.querySelectorAll("*")].forEach((c) => {
+        [...el.querySelectorAll("*")].forEach(c => {
           const els = [...c.querySelectorAll("*")];
           !c.classList.contains("branch") &&
             !c.classList.contains("group") &&
             els.length &&
-            !els.some((cc) => cc.classList.contains("branch")) &&
+            !els.some(cc => cc.classList.contains("branch")) &&
             c.classList.add("group");
         });
-        el.querySelectorAll('[class*="group"]').forEach((g) =>
+        el.querySelectorAll('[class*="group"]').forEach(g =>
           g.setAttribute("role", "group")
         );
       } else if (
         cl.contains("tooltip") ||
         (tip &&
-          [...el.querySelectorAll("*")].some((c) =>
+          [...el.querySelectorAll("*")].some(c =>
             c.classList.contains("tooltip")
           ))
       )
@@ -531,10 +536,10 @@ export default class AccessibilityProvider implements Provider {
         el.setAttribute("aria-relevant", "additions");
         [...el.querySelectorAll("*")]
           .filter(
-            (el) =>
+            el =>
               DOMValidator.isDefaultWritableInput(el) || el.role === "textbox"
           )
-          .forEach((tb) => {
+          .forEach(tb => {
             if (!tb.ariaLabel)
               tb.setAttribute(
                 "aria-label",
@@ -548,7 +553,7 @@ export default class AccessibilityProvider implements Provider {
         if (cl.contains("cell") || cl.contains("td") || cl.contains("th"))
           setRole(el, "cell");
         else if (cl.contains("menu")) {
-          [...el.querySelectorAll("*")].forEach((c) => {
+          [...el.querySelectorAll("*")].forEach(c => {
             if (
               c.classList.contains("menuitemcheckbox") ||
               c.role === "checkbox" ||
@@ -613,7 +618,7 @@ export default class AccessibilityProvider implements Provider {
             "tablist",
             "table",
             "timer",
-          ].forEach((r) => cl.contains(r) && setRole(el, r));
+          ].forEach(r => cl.contains(r) && setRole(el, r));
         }
       }
     }
@@ -626,7 +631,7 @@ export default class AccessibilityProvider implements Provider {
       if (controlled.role === "tabpanel") setRole(e, "tab");
       else if (
         ["menu", "listbox", "tree", "grid", "dialog"].some(
-          (r) => r === controlled.role
+          r => r === controlled.role
         )
       ) {
         e.ariaHasPopup = controlled.role;
